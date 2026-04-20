@@ -59,7 +59,10 @@
                 <div class="user-menu">
                     <span class="username">{{ current_user.username }}</span>
                     <span class="role-badge">{{ current_user.role }}</span>
-                    <a href="{{ url_for('auth.logout') }}" class="logout-btn">Logout</a>
+                    <form action="{{ url_for('auth.logout') }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ session.get('csrf_token') }}">
+                        <button type="submit" class="logout-btn">Logout</button>
+                    </form>
                 </div>
             </header>
             

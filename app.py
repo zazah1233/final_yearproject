@@ -1,8 +1,9 @@
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, session, request, flash
 from flask_login import LoginManager
 from models import db, SystemUser
 from config import Config
 from pathlib import Path
+import uuid
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -13,6 +14,11 @@ def create_app(config_class=Config):
     login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
+
+    @app.before_request
+    def ensure_csrf_token():
+        if 'csrf_token' not in session:
+            session['csrf_token'] = uuid.uuid4().hex
     
     @login_manager.user_loader
     def load_user(user_id):

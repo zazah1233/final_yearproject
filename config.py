@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).parent
 
@@ -16,8 +17,12 @@ class Config:
     MODEL_PATH = BASE_DIR / 'data' / 'rf_model.joblib'
     PREPROCESSOR_PATH = BASE_DIR / 'data' / 'preprocessor.joblib'
     
-    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() == 'true'
     SESSION_COOKIE_HTTPONLY = True
-    PERMANENT_SESSION_LIFETIME = 3600
+    SESSION_COOKIE_SAMESITE = os.environ.get('SESSION_COOKIE_SAMESITE', 'Lax')
+    REMEMBER_COOKIE_SECURE = os.environ.get('REMEMBER_COOKIE_SECURE', 'false').lower() == 'true'
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = os.environ.get('REMEMBER_COOKIE_SAMESITE', 'Lax')
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
     
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
