@@ -11,6 +11,7 @@ venv/
 *.db
 .env
 .env.*
+!.env.example
 
 # Agent/workflow local files
 .agent/

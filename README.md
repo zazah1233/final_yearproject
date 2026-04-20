@@ -32,21 +32,23 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## 4) Optional environment variables
+## 4) Configure environment variables
 
-If you don’t set these, app defaults are used.
-
-```bash
-export SECRET_KEY="change-this-in-production"
-export DATABASE_URL="sqlite:///$(pwd)/zazah.db"
-```
-
-To automatically create a bootstrap admin on first run:
+Create your local env file from the template:
 
 ```bash
-export ADMIN_USERNAME="admin"
-export ADMIN_PASSWORD="StrongPassword123"
+cp .env.example .env
 ```
+
+Then load it into your current shell session (required when running `python app.py`):
+
+```bash
+set -a
+source .env
+set +a
+```
+
+You can edit `.env` values as needed. If you skip this step, app defaults from `config.py` are used.
 
 ## 5) Run the app
 
@@ -89,6 +91,12 @@ On startup, the app will:
   ```bash
   which python
   which pip
+  ```
+- If env variables are not being picked up, re-run:
+  ```bash
+  set -a
+  source .env
+  set +a
   ```
 - If port `5000` is in use, stop the conflicting process or run with a different port in `app.py`.
 - If admin user is not created, ensure both `ADMIN_USERNAME` and `ADMIN_PASSWORD` are exported in the same shell session before starting the app.
