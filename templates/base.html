@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ZAZAH - Typhoid Diagnosis System{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <span class="logo-icon">🦠</span>
+                <span class="logo-text">ZAZAH</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="{{ url_for('diagnosis.dashboard') }}" class="nav-item {% if request.endpoint == 'diagnosis.dashboard' %}active{% endif %}">
+                    <span class="nav-icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('diagnosis.new_diagnosis') }}" class="nav-item {% if request.endpoint == 'diagnosis.new_diagnosis' %}active{% endif %}">
+                    <span class="nav-icon">＋</span>
+                    <span>New Diagnosis</span>
+                </a>
+                <a href="{{ url_for('history.index') }}" class="nav-item {% if request.endpoint and 'history' in request.endpoint %}active{% endif %}">
+                    <span class="nav-icon">📋</span>
+                    <span>History</span>
+                </a>
+                
+                {% if current_user.is_administrator() %}
+                <div class="nav-divider"></div>
+                <span class="nav-label">Administration</span>
+                <a href="{{ url_for('admin.rules') }}" class="nav-item {% if request.endpoint and 'admin.rules' in request.endpoint %}active{% endif %}">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Rules</span>
+                </a>
+                <a href="{{ url_for('admin.users') }}" class="nav-item {% if request.endpoint and 'admin.users' in request.endpoint %}active{% endif %}">
+                    <span class="nav-icon">👥</span>
+                    <span>Users</span>
+                </a>
+                <a href="{{ url_for('admin.reports') }}" class="nav-item {% if request.endpoint == 'admin.reports' %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span>Reports</span>
+                </a>
+                {% endif %}
+            </nav>
+        </aside>
+        
+        <div class="main-wrapper">
+            <header class="topbar">
+                <div class="page-title">
+                    {% block page_title %}Dashboard{% endblock %}
+                </div>
+                <div class="user-menu">
+                    <span class="username">{{ current_user.username }}</span>
+                    <span class="role-badge">{{ current_user.role }}</span>
+                    <a href="{{ url_for('auth.logout') }}" class="logout-btn">Logout</a>
+                </div>
+            </header>
+            
+            <main class="main-content">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                            <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    {% else %}
+    <div class="login-layout">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block login_content %}{% endblock %}
+    </div>
+    {% endif %}
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block page_title %}Add New Rule{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="page-header">
+        <h2>Add New Rule</h2>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.new_rule') }}" class="form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="rule_id">Rule ID <span class="required">*</span></label>
+                        <input type="text" id="rule_id" name="rule_id" placeholder="e.g. R-048" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category <span class="required">*</span></label>
+                        <select id="category" name="category" required>
+                            <option value="positive">Positive</option>
+                            <option value="negative">Negative</option>
+                            <option value="intermediate">Intermediate</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="outcome">Outcome <span class="required">*</span></label>
+                        <input type="text" id="outcome" name="outcome" placeholder="e.g. POSITIVE, NEGATIVE, or intermediate label" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confidence_wt">Confidence Weight <span class="required">*</span></label>
+                        <input type="number" id="confidence_wt" name="confidence_wt" min="0" max="1" step="0.01" value="0.5" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="condition_text">Human-Readable Conditions <span class="required">*</span></label>
+                    <textarea id="condition_text" name="condition_text" rows="2" placeholder="e.g. Fever Duration > 7 days AND Leukocyte Count < 4.5" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="condition_json">JSON Conditions <span class="required">*</span></label>
+                    <textarea id="condition_json" name="condition_json" rows="4" placeholder='[{"field": "fever_duration", "op": ">", "value": 7}, {"field": "leukocyte_count", "op": "<", "value": 4.5}]' required></textarea>
+                    <small class="form-hint">JSON array of condition objects with fields: field, op, value</small>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="{{ url_for('admin.rules') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ today_count }}</div>
+            <div class="stat-label">Diagnoses Today</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ "%.1f"|format(today_positive_rate) }}%</div>
+            <div class="stat-label">Positive Rate</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ "%.1f"|format(model_accuracy) }}%</div>
+            <div class="stat-label">Model Accuracy</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ "%.1f"|format(model_auc) }}%</div>
+            <div class="stat-label">AUC Score</div>
+        </div>
+    </div>
+    
+    <div class="dashboard-row">
+        <div class="card model-status-card">
+            <div class="card-header">
+                <h3>System Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="status-indicator {% if model_ready %}status-ready{% else %}status-error{% endif %}">
+                    <span class="status-dot"></span>
+                    {% if model_ready %}Models Loaded{% else %}Models Missing{% endif %}
+                </div>
+                <p class="status-note">Random Forest (200 trees) + Expert System (47 rules)</p>
+            </div>
+        </div>
+        
+        <div class="card recent-card">
+            <div class="card-header">
+                <h3>Recent Diagnoses</h3>
+                <a href="{{ url_for('history.index') }}" class="card-link">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_diagnoses %}
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Case ID</th>
+                            <th>Date</th>
+                            <th>Diagnosis</th>
+                            <th>Confidence</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in recent_diagnoses %}
+                        <tr>
+                            <td class="mono">{{ result.case_id }}</td>
+                            <td>{{ result.result_timestamp.strftime('%d %b %H:%M') }}</td>
+                            <td>
+                                <span class="badge badge-{% if 'Positive' in result.diagnosis %}positive{% else %}negative{% endif %}">
+                                    {{ result.diagnosis }}
+                                </span>
+                            </td>
+                            <td>{{ "%.1f"|format(result.confidence_score * 100) }}%</td>
+                            <td>
+                                <a href="{{ url_for('diagnosis.result', result_id=result.result_id) }}" class="btn btn-sm">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="empty-state">No diagnoses yet. Start a new diagnosis.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

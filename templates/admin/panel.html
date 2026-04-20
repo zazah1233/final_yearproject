@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block page_title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ user_count }}</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ active_users }}</div>
+            <div class="stat-label">Active Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ rule_count }}</div>
+            <div class="stat-label">Total Rules</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ active_rules }}</div>
+            <div class="stat-label">Active Rules</div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3>Recent Audit Logs</h3>
+        </div>
+        <div class="card-body">
+            {% if recent_logs %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_logs %}
+                    <tr>
+                        <td>{{ log.log_timestamp.strftime('%d %b %H:%M:%S') }}</td>
+                        <td>{{ log.user_id }}</td>
+                        <td><span class="badge badge-intermediate">{{ log.action_type }}</span></td>
+                        <td class="mono">{{ log.ip_address }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">No logs yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block page_title %}Model Retraining{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="page-header">
+        <h2>Model Retraining</h2>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <p>Upload a CSV file with patient records to retrain the machine learning models. The CSV should contain the same 22 features plus a 'typhoid' column (0 or 1).</p>
+            
+            <form method="POST" action="{{ url_for('admin.retrain') }}" enctype="multipart/form-data" class="form">
+                <div class="form-group">
+                    <label for="file">Upload CSV File</label>
+                    <input type="file" id="file" name="file" accept=".csv" required>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Upload & Retrain</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

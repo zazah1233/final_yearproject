@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block page_title %}Knowledge Base Rules{% endblock %}
+
+{% block content %}
+<div class="rules-page">
+    <div class="page-header">
+        <h2>Knowledge Base Rules</h2>
+        <a href="{{ url_for('admin.new_rule') }}" class="btn btn-primary">+ Add New Rule</a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Rule ID</th>
+                        <th>Category</th>
+                        <th>Conditions</th>
+                        <th>Outcome</th>
+                        <th>Weight</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in rules %}
+                    <tr class="{% if not rule.is_active %}row-inactive{% endif %}">
+                        <td class="mono">{{ rule.rule_id }}</td>
+                        <td>
+                            <span class="badge badge-{% if rule.category == 'positive' %}positive{% elif rule.category == 'negative' %}negative{% else %}intermediate{% endif %}">
+                                {{ rule.category }}
+                            </span>
+                        </td>
+                        <td class="condition-text">{{ rule.condition_text[:80] }}{% if rule.condition_text|length > 80 %}...{% endif %}</td>
+                        <td>{{ rule.outcome }}</td>
+                        <td>{{ "%.2f"|format(rule.confidence_wt) }}</td>
+                        <td>
+                            {% if rule.is_active %}
+                            <span class="status-active">Active</span>
+                            {% else %}
+                            <span class="status-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin.edit_rule', rule_id=rule.rule_id) }}" class="btn btn-sm">Edit</a>
+                            <form method="POST" action="{{ url_for('admin.toggle_rule', rule_id=rule.rule_id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-{% if rule.is_active %}danger{% else %}success{% endif %}">
+                                    {% if rule.is_active %}Deactivate{% else %}Activate{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block page_title %}Performance Reports{% endblock %}
+
+{% block content %}
+<div class="reports-page">
+    <div class="page-header">
+        <h2>Model Performance Reports</h2>
+    </div>
+    
+    {% if metrics %}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Training Date</div>
+            <div class="stat-value">{{ metrics.training_date }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Training Samples</div>
+            <div class="stat-value">{{ metrics.n_samples }}</div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3>Random Forest Performance</h3>
+        </div>
+        <div class="card-body">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Accuracy</th>
+                        <th>Precision</th>
+                        <th>Recall</th>
+                        <th>F1 Score</th>
+                        <th>AUC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ "%.1f"|format(metrics.rf.accuracy * 100) }}%</td>
+                        <td>{{ "%.1f"|format(metrics.rf.precision * 100) }}%</td>
+                        <td>{{ "%.1f"|format(metrics.rf.recall * 100) }}%</td>
+                        <td>{{ "%.3f"|format(metrics.rf.f1) }}</td>
+                        <td>{{ "%.3f"|format(metrics.rf.auc) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3>Decision Tree Performance</h3>
+        </div>
+        <div class="card-body">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Accuracy</th>
+                        <th>Precision</th>
+                        <th>Recall</th>
+                        <th>F1 Score</th>
+                        <th>AUC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ "%.1f"|format(metrics.dt.accuracy * 100) }}%</td>
+                        <td>{{ "%.1f"|format(metrics.dt.precision * 100) }}%</td>
+                        <td>{{ "%.1f"|format(metrics.dt.recall * 100) }}%</td>
+                        <td>{{ "%.3f"|format(metrics.dt.f1) }}</td>
+                        <td>{{ "%.3f"|format(metrics.dt.auc) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body">
+            <p class="empty-state">No metrics available. Please train the models first.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

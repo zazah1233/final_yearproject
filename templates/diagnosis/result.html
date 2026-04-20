@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block page_title %}Diagnosis Result{% endblock %}
+
+{% block content %}
+<div class="result-page">
+    <div class="disclaimer-banner">
+        <span class="disclaimer-icon">⚠️</span>
+        <span>This system is a clinical decision support tool. All results must be reviewed by a clinician.</span>
+    </div>
+    
+    <div class="result-header result-header-{% if 'Positive' in result.diagnosis %}positive{% else %}negative{% endif %}">
+        <div class="result-main">
+            <div class="result-diagnosis">
+                {% if 'Positive' in result.diagnosis %}
+                <span class="diagnosis-icon">☠️</span>
+                {% else %}
+                <span class="diagnosis-icon">✓</span>
+                {% endif %}
+                <h1>{{ result.diagnosis }}</h1>
+            </div>
+            <div class="confidence-section">
+                <div class="confidence-label">Confidence</div>
+                <div class="confidence-value">{{ "%.1f"|format(result.confidence_score * 100) }}%</div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: {{ result.confidence_score * 100 }}%"></div>
+                </div>
+            </div>
+            {% if result.route_used == 'RandomForest' %}
+            <div class="route-badge">⚡ Routed to Machine Learning</div>
+            {% endif %}
+        </div>
+        
+        <div class="result-summary">
+            <div class="summary-item">
+                <span class="summary-label">Case ID</span>
+                <span class="summary-value mono">{{ result.case_id }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Date</span>
+                <span class="summary-value">{{ result.result_timestamp.strftime('%d %b %Y, %H:%M') }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Route</span>
+                <span class="summary-value">{{ result.route_used }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">ES Score</span>
+                <span class="summary-value">{{ "%.2f"|format(result.es_score) }}</span>
+            </div>
+            {% if result.rf_probability %}
+            <div class="summary-item">
+                <span class="summary-label">RF Probability</span>
+                <span class="summary-value">{{ "%.2f"|format(result.rf_probability) }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if reasoning_trace %}
+    <div class="card">
+        <div class="card-header">
+            <h3>Clinical Rules Fired</h3>
+        </div>
+        <div class="card-body">
+            <div class="rules-list">
+                {% for rule in reasoning_trace %}
+                <div class="rule-item">
+                    <div class="rule-header">
+                        <span class="rule-id">{{ rule.rule_id }}</span>
+                        <span class="rule-outcome badge badge-{% if rule.outcome == 'POSITIVE' %}positive{% elif rule.outcome == 'NEGATIVE' %}negative{% else %}intermediate{% endif %}">{{ rule.outcome }}</span>
+                        <span class="rule-weight">weight: {{ "%.2f"|format(rule.weight) }}</span>
+                    </div>
+                    <div class="rule-condition">{{ rule.condition_text }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if feature_importances %}
+    <div class="card">
+        <div class="card-header">
+            <h3>Feature Importance (Random Forest)</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="featureChart"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="result-actions">
+        <a href="{{ url_for('diagnosis.new_diagnosis') }}" class="btn btn-primary">← New Diagnosis</a>
+        <a href="{{ url_for('history.index') }}" class="btn btn-secondary">View History</a>
+    </div>
+</div>
+
+{% if feature_importances %}
+{% block scripts %}
+<script>
+    const ctx = document.getElementById('featureChart').getContext('2d');
+    const featureLabels = {{ feature_importances.keys() | list | tojson }};
+    const featureScores = {{ feature_importances.values() | list | tojson }};
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: featureLabels,
+            datasets: [{
+                data: featureScores,
+                backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${(ctx.raw * 100).toFixed(1)}%`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#94a3b8', callback: v => `${(v*100).toFixed(0)}%` },
+                    max: 0.25,
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: '#f1f5f9', font: { size: 12 } }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endif %}
+{% endblock %}
