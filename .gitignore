@@ -1,0 +1,22 @@
+# Python cache/artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+
+# Local databases and env files
+*.db
+.env
+.env.*
+
+# Agent/workflow local files
+.agent/
+.agentic/
+
+# OS/editor noise
+.DS_Store
+.vscode/
+.idea/
