@@ -62,6 +62,82 @@ def try_load_existing_datasets():
             return df
     return None
 
+def map_csv_to_zazah(df):
+    """Map loaded CSV columns to ZAZAH feature columns."""
+    mapped = pd.DataFrame()
+    
+    mapped['age'] = df['age']
+    mapped['sex'] = df['sex'].map({'Male': 'Male', 'Female': 'Female', 'Other': 'Other'}).fillna('Other')
+    mapped['fever_duration'] = df['days_illness']
+    mapped['fever_pattern'] = 'Continuous'
+    mapped['headache_severity'] = df['headache'].astype(int)
+    mapped['abdominal_pain'] = df['abdominal_pain'].astype(int)
+    mapped['relative_bradycardia'] = 0
+    mapped['hepatosplenomegaly'] = df['splenomegaly'].astype(int)
+    mapped['leukocyte_count'] = df['wbc_k_ul']
+    mapped['platelet_count'] = df['platelets_k_ul']
+    mapped['neutrophil_pct'] = 50
+    mapped['widal_titre'] = df['widal_positive'].map({True: 4, False: 0}).fillna(0).astype(int)
+    mapped['esr'] = 30
+    mapped['haemoglobin'] = 12.0
+    mapped['lymphocyte_pct'] = 30
+    mapped['monocyte_pct'] = 5
+    mapped['temperature'] = 38.5
+    mapped['diarrhoea'] = df['diarrhea'].astype(int)
+    mapped['vomiting'] = 0
+    mapped['rose_spots'] = df['rose_spots'].astype(int)
+    mapped['nausea'] = 0
+    mapped['constipation'] = 0
+    
+    mapped['typhoid'] = df['typhoid_status'].map({'Positive': 1, 'Negative': 0, 'Minimal': 0}).fillna(0).astype(int)
+    
+    return mapped
+
+def try_load_huggingface_dataset():
+    """Try to load dataset from Hugging Face."""
+    try:
+        from datasets import load_dataset
+        ds = load_dataset('electricsheepafrica/african-typhoid-dataset')
+        train_df = ds['train'].to_pandas()
+        val_df = ds['validation'].to_pandas()
+        combined = pd.concat([train_df, val_df], ignore_index=True)
+        print(f"[ML] Loaded HuggingFace dataset: {len(combined)} samples")
+        return combined
+    except Exception as e:
+        print(f"[ML] Could not load HuggingFace dataset: {e}")
+        return None
+
+def map_huggingface_to_zazah(df):
+    """Map HuggingFace dataset columns to ZAZAH feature columns."""
+    mapped = pd.DataFrame()
+    
+    mapped['age'] = df['age']
+    mapped['sex'] = df['sex'].map({'Male': 'Male', 'Female': 'Female', 'Other': 'Other'}).fillna('Other')
+    mapped['fever_duration'] = df['days_illness']
+    mapped['fever_pattern'] = 'Continuous'
+    mapped['headache_severity'] = df['headache'].astype(int)
+    mapped['abdominal_pain'] = df['abdominal_pain'].astype(int)
+    mapped['relative_bradycardia'] = 0
+    mapped['hepatosplenomegaly'] = df['splenomegaly'].astype(int)
+    mapped['leukocyte_count'] = df['wbc_k_ul']
+    mapped['platelet_count'] = df['platelets_k_ul']
+    mapped['neutrophil_pct'] = 50
+    mapped['widal_titre'] = df['widal_positive'].map({True: 4, False: 0}).fillna(0).astype(int)
+    mapped['esr'] = 30
+    mapped['haemoglobin'] = 12.0
+    mapped['lymphocyte_pct'] = 30
+    mapped['monocyte_pct'] = 5
+    mapped['temperature'] = 38.5
+    mapped['diarrhoea'] = df['diarrhea'].astype(int)
+    mapped['vomiting'] = 0
+    mapped['rose_spots'] = df['rose_spots'].astype(int)
+    mapped['nausea'] = 0
+    mapped['constipation'] = 0
+    
+    mapped['typhoid'] = df['typhoid_status'].map({'Positive': 1, 'Negative': 0, 'Minimal': 0}).fillna(0).astype(int)
+    
+    return mapped
+
 def create_realistic_training_data():
     """
     Create training data based on realistic distributions from medical literature.
@@ -257,6 +333,17 @@ def main():
     print("=" * 60)
     
     df = try_load_existing_datasets()
+    
+    if df is not None and 'typhoid' not in df.columns:
+        print("[ML] Mapping CSV to ZAZAH format...")
+        df = map_csv_to_zazah(df)
+    
+    if df is None:
+        print("[ML] Trying HuggingFace dataset...")
+        hf_df = try_load_huggingface_dataset()
+        if hf_df is not None:
+            df = map_huggingface_to_zazah(hf_df)
+            df.to_csv(DATA_DIR / 'zazah_mapped.csv', index=False)
     
     if df is None:
         print("[ML] No existing dataset found. Using clinical literature distributions...")
