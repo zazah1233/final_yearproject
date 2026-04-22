@@ -12,6 +12,7 @@ venv/
 .env
 .env.*
 !.env.example
+*.log
 
 # Agent/workflow local files
 .agent/
@@ -21,3 +22,13 @@ venv/
 .DS_Store
 .vscode/
 .idea/
+
+# Coverage and build
+htmlcov/
+.coverage
+.coverage.*
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
