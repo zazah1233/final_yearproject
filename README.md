@@ -1,15 +1,33 @@
-# ZAZAH
+# ZAZAH Medical Diagnostic System
 
-Flask-based diagnostic support web app with:
-- User authentication and role-based access
-- Hybrid diagnosis engine (rules + ML)
-- Admin panel for users, rules, reports, and retraining upload
+ZAZAH is a Flask-based clinical decision support system for typhoid diagnosis.
+It combines:
 
-## Requirements
+- A rule-based expert system (knowledge rules)
+- A machine learning classifier (Random Forest primary, Decision Tree secondary)
+- A web UI with authentication, diagnosis workflow, history, and admin tools
 
-- Python 3.10+ (recommended)
+---
+
+## What this setup guide covers
+
+This README includes end-to-end setup for:
+
+1. Python environment and dependencies
+2. Environment variables and database bootstrap
+3. Running the full web application
+4. Training/retraining ML models (automatic + manual)
+5. Testing and common troubleshooting
+
+---
+
+## Prerequisites
+
+- Python 3.10+
 - `pip`
-- Linux/macOS shell (commands below use bash/zsh)
+- Linux/macOS shell (commands below use `bash`/`zsh`)
+
+---
 
 ## 1) Clone and enter project
 
@@ -18,12 +36,23 @@ git clone <your-repo-url>
 cd zazah
 ```
 
-## 2) Create and activate a virtual environment
+---
+
+## 2) Create and activate virtual environment
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
+
+Check interpreter location (optional but useful):
+
+```bash
+which python
+which pip
+```
+
+---
 
 ## 3) Install dependencies
 
@@ -32,15 +61,17 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+---
+
 ## 4) Configure environment variables
 
-Create your local env file from the template:
+Create `.env` from template:
 
 ```bash
 cp .env.example .env
 ```
 
-Then load it into your current shell session (required when running `python app.py`):
+Load variables into your current shell session:
 
 ```bash
 set -a
@@ -48,55 +79,125 @@ source .env
 set +a
 ```
 
-You can edit `.env` values as needed. If you skip this step, app defaults from `config.py` are used.
+Important variables:
 
-## 5) Run the app
+- `SECRET_KEY`: Flask secret
+- `DATABASE_URL`: SQLAlchemy connection string (default is local SQLite)
+- `ADMIN_USERNAME` and `ADMIN_PASSWORD`: optional bootstrap admin account
+- `THRESHOLD_HIGH`, `THRESHOLD_LOW`, `RF_THRESHOLD`: diagnosis thresholds
+
+If you do not load `.env`, defaults from `config.py` are used.
+
+---
+
+## 5) Run the application
 
 ```bash
 python app.py
 ```
 
-App starts on:
+App URLs:
+
 - `http://127.0.0.1:5000`
 - `http://0.0.0.0:5000`
 
-## First startup behavior
+---
 
-On startup, the app will:
-- Create database tables automatically
-- Seed default knowledge rules if none exist
-- Create bootstrap admin only if `ADMIN_USERNAME` and `ADMIN_PASSWORD` are set
-- Train ML models automatically if model files are missing in `data/`
+## First startup behavior (automatic bootstrap)
 
-## Login
+When `python app.py` starts for the first time, the app automatically:
 
-- Open `http://127.0.0.1:5000`
-- Use your bootstrap admin credentials if you set them
-- Or create a normal user account from the signup page
+1. Creates database tables
+2. Seeds default knowledge rules (if rules table is empty)
+3. Creates bootstrap admin (only if `ADMIN_USERNAME` and `ADMIN_PASSWORD` are set)
+4. Trains ML models if `data/rf_model.joblib` is missing
 
-## Project structure (high level)
+So a fresh checkout can become fully runnable with a single app start.
 
-- `app.py` — Flask entrypoint and app factory
-- `config.py` — app configuration and environment-based settings
-- `routes/` — auth, diagnosis, history, and admin routes
-- `engine/` — inference and hybrid diagnostic logic
-- `ml/` — model training script
-- `models/` — SQLAlchemy models
-- `templates/`, `static/` — frontend templates and assets
-- `data/` — trained models, metrics, and seed rules
+---
+
+## Model training and retraining
+
+### Option A: Automatic training (on app startup)
+
+Automatic training runs only when model files are missing.
+
+Trigger it by removing model artifacts, then restart app:
+
+```bash
+rm -f data/rf_model.joblib data/dt_model.joblib data/preprocessor.joblib data/feature_columns.joblib data/metrics.json
+python app.py
+```
+
+### Option B: Manual training (recommended for explicit control)
+
+```bash
+python ml/train.py
+```
+
+The trainer uses data in this order:
+
+1. Existing CSV files found in `data/`
+2. Hugging Face dataset (`electricsheepafrica/african-typhoid-dataset`) if available
+3. Clinically informed fallback synthetic generation if no dataset is available
+
+Output artifacts written to `data/`:
+
+- `rf_model.joblib`
+- `dt_model.joblib`
+- `preprocessor.joblib`
+- `feature_columns.joblib`
+- `metrics.json`
+
+### CSV dataset compatibility notes
+
+If you provide your own CSV for training, the mapper expects fields matching the trainer mapping (for example: `age`, `sex`, `days_illness`, `headache`, `abdominal_pain`, `splenomegaly`, `wbc_k_ul`, `platelets_k_ul`, `widal_positive`, `diarrhea`, `rose_spots`, `typhoid_status`).
+
+---
+
+## Admin panel capabilities
+
+After logging in as administrator, you can:
+
+- Manage users
+- Create/edit/toggle knowledge rules
+- View reports (including metrics from `data/metrics.json`)
+
+Note: `/admin/retrain` currently supports CSV upload plumbing/UI, but full in-app retraining flow is not yet implemented in `routes/admin.py`. Use `python ml/train.py` for actual retraining.
+
+---
+
+## Run tests
+
+```bash
+pytest tests/
+```
+
+---
+
+## Project layout
+
+- `app.py` — Flask entrypoint and startup bootstrap
+- `config.py` — configuration defaults and env overrides
+- `ml/train.py` — model training pipeline
+- `engine/` — hybrid inference logic
+- `models/` — SQLAlchemy data models
+- `routes/` — auth, diagnosis, history, admin routes
+- `templates/`, `static/` — frontend UI assets
+- `data/` — model artifacts, metrics, seed data
+
+---
 
 ## Troubleshooting
 
-- If dependency install fails, verify active venv and rerun:
-  ```bash
-  which python
-  which pip
-  ```
-- If env variables are not being picked up, re-run:
-  ```bash
-  set -a
-  source .env
-  set +a
-  ```
-- If port `5000` is in use, stop the conflicting process or run with a different port in `app.py`.
-- If admin user is not created, ensure both `ADMIN_USERNAME` and `ADMIN_PASSWORD` are exported in the same shell session before starting the app.
+- **Environment variables not applied**: reload `.env` in the same shell before running app.
+- **Admin not created**: ensure `ADMIN_USERNAME` and `ADMIN_PASSWORD` are both set before app startup.
+- **Port 5000 busy**: stop the conflicting process or change port in `app.py`.
+- **Model files missing/corrupt**: rerun `python ml/train.py`.
+- **Dependency errors**: confirm active virtual environment and reinstall with `pip install -r requirements.txt`.
+
+---
+
+## License
+
+MIT — see `LICENSE`.
