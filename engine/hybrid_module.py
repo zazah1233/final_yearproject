@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any
+from flask import current_app
 from .inference_engine import InferenceEngine
 from .rf_classifier import RFClassifier
 from .preprocessor import Preprocessor
@@ -15,14 +16,33 @@ class DiagnosticResult:
     feature_importances: Optional[Dict[str, float]] = None
 
 class HybridModule:
-    THRESHOLD_HIGH = 0.65
-    THRESHOLD_LOW = 0.45
-    RF_THRESHOLD = 0.50
-    
     def __init__(self, rules=None, preprocessor_path=None, rf_model_path=None):
         self.inference_engine = InferenceEngine(rules)
         self.preprocessor = Preprocessor(preprocessor_path)
         self.rf_classifier = RFClassifier(rf_model_path)
+        
+        self._threshold_high = 0.85
+        self._threshold_low = 0.10
+        self._rf_threshold = 0.50
+        
+        try:
+            self._threshold_high = current_app.config.get('THRESHOLD_HIGH', 0.85)
+            self._threshold_low = current_app.config.get('THRESHOLD_LOW', 0.10)
+            self._rf_threshold = current_app.config.get('RF_THRESHOLD', 0.50)
+        except RuntimeError:
+            pass
+    
+    @property
+    def THRESHOLD_HIGH(self):
+        return self._threshold_high
+    
+    @property
+    def THRESHOLD_LOW(self):
+        return self._threshold_low
+    
+    @property
+    def RF_THRESHOLD(self):
+        return self._rf_threshold
     
     def set_rules(self, rules):
         """Set rules for inference engine."""
