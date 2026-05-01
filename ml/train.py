@@ -68,7 +68,7 @@ def map_csv_to_zazah(df):
     
     mapped['age'] = df['age']
     mapped['sex'] = df['sex'].map({'Male': 'Male', 'Female': 'Female', 'Other': 'Other'}).fillna('Other')
-    mapped['fever_duration'] = df['days_illness']
+    mapped['fever_duration'] = df['days_illness'].fillna(df['days_illness'].median())
     mapped['fever_pattern'] = 'Continuous'
     mapped['headache_severity'] = df['headache'].astype(int)
     mapped['abdominal_pain'] = df['abdominal_pain'].astype(int)
@@ -113,7 +113,7 @@ def map_huggingface_to_zazah(df):
     
     mapped['age'] = df['age']
     mapped['sex'] = df['sex'].map({'Male': 'Male', 'Female': 'Female', 'Other': 'Other'}).fillna('Other')
-    mapped['fever_duration'] = df['days_illness']
+    mapped['fever_duration'] = df['days_illness'].fillna(df['days_illness'].median())
     mapped['fever_pattern'] = 'Continuous'
     mapped['headache_severity'] = df['headache'].astype(int)
     mapped['abdominal_pain'] = df['abdominal_pain'].astype(int)

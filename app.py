@@ -3,7 +3,13 @@ from flask_login import LoginManager
 from models import db, SystemUser
 from config import Config
 from pathlib import Path
+import sys
 import uuid
+
+if sys.version_info < (3, 10) or sys.version_info >= (3, 14):
+    print(f"[ERROR] Python 3.10-3.13 required. Found {sys.version}.")
+    print("Activate the project venv: source .venv/bin/activate")
+    sys.exit(1)
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -55,5 +61,7 @@ def create_app(config_class=Config):
     return app
 
 if __name__ == '__main__':
+    import os
     app = create_app()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    debug = os.environ.get('FLASK_DEBUG', 'true').lower() == 'true'
+    app.run(debug=debug, host='0.0.0.0', port=5000)
