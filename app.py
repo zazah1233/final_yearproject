@@ -1,10 +1,18 @@
 from flask import Flask, redirect, url_for, session, request, flash
 from flask_login import LoginManager
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from models import db, SystemUser
 from config import Config
 from pathlib import Path
 import sys
 import uuid
+
+# Create limiter instance
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 if sys.version_info < (3, 10) or sys.version_info >= (3, 14):
     print(f"[ERROR] Python 3.10-3.13 required. Found {sys.version}.")
@@ -16,6 +24,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
     
     db.init_app(app)
+    limiter.init_app(app)
     
     login_manager = LoginManager()
     login_manager.init_app(app)
@@ -32,6 +41,9 @@ def create_app(config_class=Config):
     
     from routes import register_blueprints
     register_blueprints(app)
+    
+    # Apply rate limiting to login POST requests
+    limiter.limit("5 per minute")(app.view_functions['auth.login'])
     
     @app.route('/')
     def index():
@@ -63,5 +75,5 @@ def create_app(config_class=Config):
 if __name__ == '__main__':
     import os
     app = create_app()
-    debug = os.environ.get('FLASK_DEBUG', 'true').lower() == 'true'
+    debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
     app.run(debug=debug, host='0.0.0.0', port=5000)

@@ -9,21 +9,73 @@
     </div>
     
     <div class="card">
+        <div class="card-header">
+            <h3>Status</h3>
+        </div>
         <div class="card-body">
-            <p>Upload a CSV file with patient records to retrain the machine learning models. The CSV should contain the same 22 features plus a 'typhoid' column (0 or 1).</p>
+            <div class="alert alert-warning">
+                <strong>Note:</strong> The full automatic retraining pipeline is not yet implemented. 
+                You can upload a CSV file for validation, but the models will not be automatically retrained.
+            </div>
+            
+            <h4>Manual Retraining Process</h4>
+            <p>To retrain the models with custom data, follow these steps:</p>
+            <ol>
+                <li>Prepare a CSV file with at least 500 patient records</li>
+                <li>Ensure the CSV contains the required 22 clinical features plus a 'typhoid' column (0 for negative, 1 for positive)</li>
+                <li>Place the CSV file in the <code>data/</code> directory</li>
+                <li>Run: <code>python ml/train.py</code> from the project root</li>
+                <li>The script will use your CSV and retrain the models</li>
+                <li>Models will be saved to <code>data/rf_model.joblib</code> and <code>data/dt_model.joblib</code></li>
+            </ol>
+            
+            <hr>
+            
+            <h4>Or Upload a File for Review</h4>
+            <p>Upload a CSV file to validate its format and save it for later use:</p>
             
             <form method="POST" action="{{ url_for('admin.retrain') }}" enctype="multipart/form-data" class="form">
                 <div class="form-group">
                     <label for="file">Upload CSV File</label>
                     <input type="file" id="file" name="file" accept=".csv" required>
+                    <small>Required columns: age, sex, fever_duration, fever_pattern, headache_severity, abdominal_pain, 
+                    relative_bradycardia, hepatosplenomegaly, leukocyte_count, platelet_count, neutrophil_pct, widal_titre, 
+                    esr, haemoglobin, lymphocyte_pct, monocyte_pct, temperature, diarrhoea, vomiting, rose_spots, nausea, 
+                    constipation, typhoid</small>
                 </div>
                 
                 <div class="form-actions">
                     <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Upload & Retrain</button>
+                    <button type="submit" class="btn btn-primary">Upload CSV</button>
                 </div>
             </form>
+            
+            <div style="margin-top: 20px; padding: 15px; background: var(--bg-tertiary); border-radius: var(--radius);">
+                <small>
+                    <strong>Recent Upload:</strong> Uploaded files are saved to <code>/tmp/zazah_retrain.csv</code> for review.
+                    Refresh the page after manual retraining to see updated model metrics.
+                </small>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    code {
+        background: var(--bg-tertiary);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+    }
+    
+    ol {
+        margin-left: 20px;
+    }
+    
+    ol li {
+        margin: 8px 0;
+        line-height: 1.6;
+    }
+</style>
 {% endblock %}

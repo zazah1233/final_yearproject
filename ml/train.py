@@ -248,9 +248,10 @@ def preprocess_data(df):
     return X, y, feature_cols
 
 def train_random_forest(X_train, y_train, X_test, y_test):
-    """Train Random Forest classifier."""
+    """Train Random Forest classifier with probability calibration."""
     from sklearn.ensemble import RandomForestClassifier
-    from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+    from sklearn.calibration import CalibratedClassifierCV
+    from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, brier_score_loss
     
     rf = RandomForestClassifier(
         n_estimators=200,
@@ -265,23 +266,28 @@ def train_random_forest(X_train, y_train, X_test, y_test):
     
     rf.fit(X_train, y_train)
     
-    y_pred = rf.predict(X_test)
-    y_proba = rf.predict_proba(X_test)[:, 1]
+    calibrated = CalibratedClassifierCV(rf, method='sigmoid', cv=3)
+    calibrated.fit(X_train, y_train)
+    
+    y_pred = calibrated.predict(X_test)
+    y_proba = calibrated.predict_proba(X_test)[:, 1]
     
     metrics = {
         'accuracy': accuracy_score(y_test, y_pred),
         'precision': precision_score(y_test, y_pred),
         'recall': recall_score(y_test, y_pred),
         'f1': f1_score(y_test, y_pred),
-        'auc': roc_auc_score(y_test, y_proba)
+        'auc': roc_auc_score(y_test, y_proba),
+        'brier_score': brier_score_loss(y_test, y_proba)
     }
     
-    return rf, metrics
+    return calibrated, metrics
 
 def train_decision_tree(X_train, y_train, X_test, y_test):
-    """Train Decision Tree classifier."""
+    """Train Decision Tree classifier with probability calibration."""
     from sklearn.tree import DecisionTreeClassifier
-    from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+    from sklearn.calibration import CalibratedClassifierCV
+    from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, brier_score_loss
     
     dt = DecisionTreeClassifier(
         max_depth=7,
@@ -293,18 +299,22 @@ def train_decision_tree(X_train, y_train, X_test, y_test):
     
     dt.fit(X_train, y_train)
     
-    y_pred = dt.predict(X_test)
-    y_proba = dt.predict_proba(X_test)[:, 1]
+    calibrated = CalibratedClassifierCV(dt, method='sigmoid', cv=3)
+    calibrated.fit(X_train, y_train)
+    
+    y_pred = calibrated.predict(X_test)
+    y_proba = calibrated.predict_proba(X_test)[:, 1]
     
     metrics = {
         'accuracy': accuracy_score(y_test, y_pred),
         'precision': precision_score(y_test, y_pred),
         'recall': recall_score(y_test, y_pred),
         'f1': f1_score(y_test, y_pred),
-        'auc': roc_auc_score(y_test, y_proba)
+        'auc': roc_auc_score(y_test, y_proba),
+        'brier_score': brier_score_loss(y_test, y_proba)
     }
     
-    return dt, metrics
+    return calibrated, metrics
 
 def create_preprocessor(X_train):
     """Create and fit preprocessor pipeline."""

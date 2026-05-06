@@ -184,6 +184,11 @@ def toggle_user(user_id):
 @login_required
 @admin_required
 def retrain():
+    """
+    Admin endpoint for model retraining with new data.
+    Note: Full retraining pipeline is not yet implemented.
+    The uploaded CSV is validated but not used for automatic retraining.
+    """
     if request.method == 'POST':
         if 'file' not in request.files:
             flash('No file uploaded', 'danger')
@@ -198,11 +203,16 @@ def retrain():
             try:
                 csv_path = '/tmp/zazah_retrain.csv'
                 file.save(csv_path)
-                flash('File uploaded. Retraining will be implemented.', 'success')
+                flash(
+                    'CSV file uploaded successfully. Note: The full retraining pipeline '
+                    'is not yet implemented. Retraining should be performed manually '
+                    'using ml/train.py with custom data. See README for details.',
+                    'warning'
+                )
             except Exception as e:
                 flash(f'Error processing file: {e}', 'danger')
         else:
-            flash('Please upload a CSV file', 'danger')
+            flash('Please upload a CSV file (.csv extension required)', 'danger')
         
         return redirect(url_for('admin.retrain'))
     

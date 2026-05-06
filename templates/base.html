@@ -98,6 +98,79 @@
     </div>
     {% endif %}
     
+    <!-- Session Timeout Warning Modal -->
+    {% if current_user.is_authenticated %}
+    <div id="sessionTimeoutModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Session Timeout Warning</h3>
+            </div>
+            <div class="modal-body">
+                <p>Your session will expire in approximately <span id="countdown">10</span> minutes due to inactivity.</p>
+                <p>Click "Extend Session" to continue or you will be logged out.</p>
+            </div>
+            <div class="modal-footer">
+                <button id="extendSessionBtn" class="btn btn-primary">Extend Session</button>
+                <button onclick="document.getElementById('sessionTimeoutModal').style.display='none'" class="btn btn-secondary">Dismiss</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Session timeout warning (1 hour = 3600 seconds, warn at 50 minutes)
+        const SESSION_TIMEOUT = 3600000; // milliseconds
+        const WARNING_TIME = 3000000; // 50 minutes
+        let sessionTimer;
+        let warningShown = false;
+
+        function resetSessionTimeout() {
+            clearTimeout(sessionTimer);
+            warningShown = false;
+            document.getElementById('sessionTimeoutModal').style.display = 'none';
+            
+            sessionTimer = setTimeout(function() {
+                if (!warningShown) {
+                    warningShown = true;
+                    showSessionTimeoutWarning();
+                    setTimeout(function() {
+                        location.href = '{{ url_for("auth.login") }}';
+                    }, WARNING_TIME - SESSION_TIMEOUT + SESSION_TIMEOUT);
+                }
+            }, WARNING_TIME);
+        }
+
+        function showSessionTimeoutWarning() {
+            document.getElementById('sessionTimeoutModal').style.display = 'block';
+            let countdown = 10;
+            const countdownInterval = setInterval(function() {
+                countdown--;
+                document.getElementById('countdown').textContent = countdown;
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 60000); // Update every minute
+        }
+
+        function extendSession() {
+            fetch('{{ url_for("diagnosis.dashboard") }}', { method: 'GET' })
+                .then(() => {
+                    resetSessionTimeout();
+                    document.getElementById('sessionTimeoutModal').style.display = 'none';
+                });
+        }
+
+        document.getElementById('extendSessionBtn').addEventListener('click', extendSession);
+
+        // Reset timeout on user activity
+        document.addEventListener('click', resetSessionTimeout);
+        document.addEventListener('keypress', resetSessionTimeout);
+        document.addEventListener('scroll', resetSessionTimeout);
+
+        // Initialize
+        resetSessionTimeout();
+    </script>
+    {% endif %}
+    
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
